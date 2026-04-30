@@ -12,8 +12,8 @@ class ParkieiApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Substitua pela cor principal do seu Figma
-    const Color primaryColor = Color(0xFF1E3A8A); // Azul escuro moderno
+  
+    const Color primaryColor = Color(0xFF1E3A8A); 
 
     return MaterialApp(
       title: 'Parkiei',
@@ -26,7 +26,7 @@ class ParkieiApp extends StatelessWidget {
         // Estilo global dos campos de texto (TextField)
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: const Color(0xFFF1F5F9), // Fundo cinza bem clarinho
+          fillColor: const Color(0xFFF1F5F9),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,

@@ -6,7 +6,7 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 1. Cor de fundo escurecida (puxada do Figma)
+      
       backgroundColor: const Color(0xFF333333), 
       body: SafeArea(
         child: Center(
@@ -16,13 +16,12 @@ class LoginScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 2. Logo Parkiei
-                // Coloque a imagem sem fundo na sua pasta assets e ajuste o caminho abaixo
+               
                 Image.asset(
                   'assets/logo.png', 
                   height: 100,
                   errorBuilder: (context, error, stackTrace) {
-                    // Placeholder caso a imagem ainda não esteja configurada
+                    
                     return const Text(
                       'PARKIEI',
                       textAlign: TextAlign.center,

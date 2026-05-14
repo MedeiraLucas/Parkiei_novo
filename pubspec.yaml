@@ -20,6 +20,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   
-  # Adicione esta seção para habilitar as imagens locais
+  
   assets:
     - assets/

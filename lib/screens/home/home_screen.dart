@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../data/parking_mock.dart';
+import '../rating/rating_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   GoogleMapController? _mapController;
   
-  // NOVA VARIÁVEL: Controla se a lista está aberta ou fechada
+  // Controla se a lista está aberta ou fechada
   bool _isListVisible = true;
 
   final String _darkMapStyle = '''
@@ -126,7 +127,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.pop(context);
+                          Navigator.pop(context); // Fecha o modal de ação atual
+                          // AQUI ESTÁ A ALTERAÇÃO: Passando o nome do estacionamento
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RatingScreen(parkingName: parking.name),
+                            ),
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF8A8A8A),
@@ -241,11 +249,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     myLocationButtonEnabled: false,
                     mapToolbarEnabled: false,
                   ),
-                  // MUDANÇA: Substituído Positioned por AnimatedPositioned
                   AnimatedPositioned(
-                    duration: const Duration(milliseconds: 300), // Tempo da animação
-                    curve: Curves.easeInOut, // Curva de suavização
-                    bottom: _isListVisible ? 0 : -360, // Se falso, desce a lista deixando apenas o título visível
+                    duration: const Duration(milliseconds: 300), 
+                    curve: Curves.easeInOut, 
+                    bottom: _isListVisible ? 0 : -360, 
                     left: 0,
                     right: 0,
                     child: Container(
@@ -263,15 +270,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       child: Column(
                         children: [
-                          // MUDANÇA: Envolto em GestureDetector para reconhecer o clique
                           GestureDetector(
                             onTap: () {
                               setState(() {
-                                _isListVisible = !_isListVisible; // Inverte o estado ao clicar
+                                _isListVisible = !_isListVisible; 
                               });
                             },
                             child: Container(
-                              color: Colors.transparent, // Necessário para registrar o clique em toda a área
+                              color: Colors.transparent, 
                               width: double.infinity,
                               child: Column(
                                 children: [

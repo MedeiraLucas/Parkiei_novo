@@ -119,50 +119,6 @@ class LoginScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-                
-                // 7. Divisor "ou entre com"
-                Row(
-                  children: [
-                    const Expanded(child: Divider(color: Colors.white24, thickness: 1)),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                        'ou entre com',
-                        style: TextStyle(color: Colors.white54),
-                      ),
-                    ),
-                    const Expanded(child: Divider(color: Colors.white24, thickness: 1)),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                
-                // 8. Botão do Google
-                Center(
-                  child: InkWell(
-                    onTap: () {
-                      // Lógica de login com Google aqui
-                    },
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      width: 120,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF252525),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white12),
-                      ),
-                      child: Center(
-                        // Usando network image para o G do Google para você testar na hora. 
-                        // Depois você pode trocar por um Image.asset local se preferir.
-                        child: Image.network(
-                          'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/120px-Google_%22G%22_logo.svg.png',
-                          height: 24,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),

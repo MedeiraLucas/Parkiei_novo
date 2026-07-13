@@ -5,7 +5,7 @@ import '../../models/parking_model.dart';
 import '../../services/camera_service.dart';
 import '../../services/parking_service.dart';
 import '../../services/realtime_service.dart';
-import '../parking_detail/parking_detail_screen.dart';
+import '../rating/rating_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -133,12 +133,106 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _openParkingDetail(ParkingModel parking) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ParkingDetailScreen(parking: parking),
-      ),
+  void _showParkingActionDialog(ParkingModel parking) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: const Color(0xFF616161),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text.rich(
+                  TextSpan(
+                    text: 'Deseja iniciar o percurso\ncom destino a\n',
+                    style: const TextStyle(
+                      color: Colors.white, 
+                      fontSize: 16, 
+                      height: 1.4,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: '${parking.name}\n',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const TextSpan(
+                        text: 'ou Reservar uma vaga?',
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context); // Fecha o modal de ação atual
+                          // AQUI ESTÁ A ALTERAÇÃO: Passando o nome do estacionamento
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RatingScreen(parkingName: parking.name),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF8A8A8A),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'Ver Perfil',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold, 
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFF2B3D),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'Iniciar\nPercurso',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500, 
+                            fontSize: 15, 
+                            height: 1.2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -300,7 +394,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 : Colors.green;
 
     return GestureDetector(
-      onTap: () => _openParkingDetail(parking),
+      onTap: () => _showParkingActionDialog(parking),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

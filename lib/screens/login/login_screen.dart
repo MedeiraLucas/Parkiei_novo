@@ -1,12 +1,48 @@
 import 'package:flutter/material.dart';
+// Importe a tela de admin que vamos criar logo abaixo.
+// Ajuste o caminho se necessário:
+import '../admin/admin_screen.dart'; 
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  // Controladores para capturar o que o usuário digita
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  void _fazerLogin() {
+    final String email = _emailController.text.trim();
+    final String password = _passwordController.text.trim();
+
+    // VALIDAÇÃO ESTÁTICA PARA O ADMIN
+    if (email == 'admin' && password == 'admin') {
+      // Se for admin, navega para o painel de administração
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const AdminScreen()),
+      );
+    } else {
+      // Se não for admin, segue o fluxo normal para o mapa
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+  }
+
+  @override
+  void dispose() {
+    // Limpa os controladores quando a tela for destruída
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       backgroundColor: const Color(0xFF333333), 
       body: SafeArea(
         child: Center(
@@ -16,12 +52,10 @@ class LoginScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-               
                 Image.asset(
                   'assets/logo.png', 
                   height: 100,
                   errorBuilder: (context, error, stackTrace) {
-                    
                     return const Text(
                       'PARKIEI',
                       textAlign: TextAlign.center,
@@ -38,16 +72,17 @@ class LoginScreen extends StatelessWidget {
                 
                 // 3. Input de E-mail
                 TextField(
+                  controller: _emailController, // Conectado ao controlador
                   keyboardType: TextInputType.emailAddress,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: '',
+                    hintText: 'E-mail',
                     hintStyle: const TextStyle(color: Colors.white38),
                     filled: true,
-                    fillColor: const Color(0xFF1A1A1A), // Fundo mais escuro
+                    fillColor: const Color(0xFF1A1A1A), 
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.0),
-                      borderSide: BorderSide.none, // Remove a linha
+                      borderSide: BorderSide.none, 
                     ),
                     contentPadding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
                   ),
@@ -56,10 +91,11 @@ class LoginScreen extends StatelessWidget {
                 
                 // 4. Input de Senha
                 TextField(
+                  controller: _passwordController,
                   obscureText: true,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: '',
+                    hintText: 'Senha',
                     hintStyle: const TextStyle(color: Colors.white38),
                     filled: true,
                     fillColor: const Color(0xFF1A1A1A),
@@ -68,7 +104,6 @@ class LoginScreen extends StatelessWidget {
                       borderSide: BorderSide.none,
                     ),
                     contentPadding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
-                    // Ícone do olhinho
                     suffixIcon: const Icon(Icons.visibility_off_outlined, color: Colors.white38),
                   ),
                 ),
@@ -77,19 +112,17 @@ class LoginScreen extends StatelessWidget {
                 // 5. Botão de Entrar
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red, // Cor vermelha do botão
+                    backgroundColor: Colors.red, 
                     padding: const EdgeInsets.symmetric(vertical: 20.0),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16.0),
                     ),
                   ),
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/home');
-                  },
+                  onPressed: _fazerLogin,
                   child: const Text(
                     'Entrar',
                     style: TextStyle(
-                      color: Colors.black, // Texto preto igual ao design
+                      color: Colors.black, 
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -118,6 +151,45 @@ class LoginScreen extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 24),
+
+                // 7. Divisor "ou entre com"
+                Row(
+                  children: [
+                    const Expanded(child: Divider(color: Colors.white24, thickness: 1)),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        'ou entre com',
+                        style: TextStyle(color: Colors.white54),
+                      ),
+                    ),
+                    const Expanded(child: Divider(color: Colors.white24, thickness: 1)),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                Center(
+                  child: InkWell(
+                    onTap: () {},
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      width: 120,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF252525),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white12),
+                      ),
+                      child: Center(
+                        child: Image.network(
+                          'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/120px-Google_%22G%22_logo.svg.png',
+                          height: 24,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),

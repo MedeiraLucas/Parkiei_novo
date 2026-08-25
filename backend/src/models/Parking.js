@@ -13,6 +13,10 @@ const Parking = sequelize.define('Parking', {
   vacancies: {
     type: DataTypes.INTEGER,
     defaultValue: 0
+  },
+  occupiedSpots: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   }
 });
 

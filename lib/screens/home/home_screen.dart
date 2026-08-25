@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../../data/parking_mock.dart';
+import '../../models/parking_model.dart';
+import '../../services/camera_service.dart';
+import '../../services/parking_service.dart';
+import '../../services/realtime_service.dart';
 import '../rating/rating_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -11,10 +15,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  GoogleMapController? _mapController;
-  
-  // Controla se a lista está aberta ou fechada
   bool _isListVisible = true;
+
+  List<ParkingModel> _parkings = [];
+  bool _loading = true;
+  Timer? _refreshTimer;
+  StreamSubscription<CameraStatus>? _wsSub;
+  CameraStatus? _cameraStatus;
 
   final String _darkMapStyle = '''
   [
@@ -32,18 +39,65 @@ class _HomeScreenState extends State<HomeScreen> {
   ]
   ''';
 
+  @override
+  void initState() {
+    super.initState();
+    _loadParkings();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) => _loadParkings());
+    _wsSub = RealtimeService.instance.statusStream.listen((status) {
+      if (mounted) setState(() => _cameraStatus = status);
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    _wsSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadParkings() async {
+    final parkings = await ParkingService.fetchParkings();
+    if (mounted) {
+      setState(() {
+        _parkings = parkings;
+        _loading = false;
+      });
+    }
+  }
+
+  // Retorna os valores de ocupação reais: usa camera para o ID 1, model para os demais
+  (int free, int total) _effectiveOccupancy(ParkingModel parking) {
+    if (parking.id == 1 && _cameraStatus != null) {
+      return (_cameraStatus!.free, _cameraStatus!.total);
+    }
+    return (parking.freeSpots, parking.vacancies);
+  }
+
   Set<Marker> _createMarkers() {
-    return parkingList.map((parking) {
-      return Marker(
-        markerId: MarkerId(parking.name),
-        position: parking.position,
-        infoWindow: InfoWindow(
-          title: parking.name,
-          snippet: parking.distance,
-        ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-      );
-    }).toSet();
+    return _parkings
+        .where((p) => p.position != null)
+        .map((parking) {
+          final (free, total) = _effectiveOccupancy(parking);
+          return Marker(
+            markerId: MarkerId(parking.id.toString()),
+            position: parking.position!,
+            infoWindow: InfoWindow(
+              title: parking.name,
+              snippet: total > 0
+                  ? '$free vaga(s) livre(s) de $total'
+                  : parking.location,
+            ),
+            icon: total == 0
+                ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure)
+                : free == 0
+                    ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed)
+                    : free <= total * 0.3
+                        ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange)
+                        : BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          );
+        })
+        .toSet();
   }
 
   void _mostrarPopupSair() {
@@ -52,23 +106,15 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF242f3e),
-          title: const Text(
-            'Sair',
-            style: TextStyle(color: Colors.white),
-          ),
+          title: const Text('Sair', style: TextStyle(color: Colors.white)),
           content: const Text(
             'Tem certeza que deseja sair?',
             style: TextStyle(color: Colors.white70),
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text(
-                'Cancelar',
-                style: TextStyle(color: Colors.white54),
-              ),
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar', style: TextStyle(color: Colors.white54)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -87,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showParkingActionDialog(dynamic parking) {
+  void _showParkingActionDialog(ParkingModel parking) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -214,10 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
                     ),
                   ),
-                  Image.asset(
-                    'assets/logo.png',
-                    height: 32,
-                  ),
+                  Image.asset('assets/logo.png', height: 32),
                   GestureDetector(
                     onTap: () {},
                     child: Container(
@@ -241,18 +284,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       zoom: 14,
                     ),
                     markers: _createMarkers(),
-                    onMapCreated: (controller) {
-                      _mapController = controller;
-                      _mapController!.setMapStyle(_darkMapStyle);
-                    },
+                    style: _darkMapStyle,
+                    onMapCreated: (_) {},
                     zoomControlsEnabled: false,
                     myLocationButtonEnabled: false,
                     mapToolbarEnabled: false,
                   ),
                   AnimatedPositioned(
-                    duration: const Duration(milliseconds: 300), 
-                    curve: Curves.easeInOut, 
-                    bottom: _isListVisible ? 0 : -360, 
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    bottom: _isListVisible ? 0 : -360,
                     left: 0,
                     right: 0,
                     child: Container(
@@ -261,23 +302,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [
-                            Color(0xFF969696),
-                            Color(0xFF1E1E1E),
-                          ],
+                          colors: [Color(0xFF969696), Color(0xFF1E1E1E)],
                         ),
                         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                       ),
                       child: Column(
                         children: [
                           GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _isListVisible = !_isListVisible; 
-                              });
-                            },
+                            onTap: () => setState(() => _isListVisible = !_isListVisible),
                             child: Container(
-                              color: Colors.transparent, 
+                              color: Colors.transparent,
                               width: double.infinity,
                               child: Column(
                                 children: [
@@ -290,14 +324,31 @@ class _HomeScreenState extends State<HomeScreen> {
                                       borderRadius: BorderRadius.circular(2),
                                     ),
                                   ),
-                                  const Text(
-                                    "PERTO DE VOCÊ",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 18,
-                                      color: Colors.black87,
-                                      letterSpacing: 1.0,
-                                    ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Text(
+                                        'PERTO DE VOCÊ',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 18,
+                                          color: Colors.black87,
+                                          letterSpacing: 1.0,
+                                        ),
+                                      ),
+                                      if (_loading)
+                                        const Padding(
+                                          padding: EdgeInsets.only(left: 8),
+                                          child: SizedBox(
+                                            width: 14,
+                                            height: 14,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.black54,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                   const SizedBox(height: 16),
                                 ],
@@ -305,14 +356,17 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           Expanded(
-                            child: ListView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              itemCount: parkingList.length,
-                              itemBuilder: (context, index) {
-                                final parking = parkingList[index];
-                                return _buildParkingCard(parking);
-                              },
-                            ),
+                            child: _loading && _parkings.isEmpty
+                                ? const Center(
+                                    child: CircularProgressIndicator(color: Colors.white70),
+                                  )
+                                : ListView.builder(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    itemCount: _parkings.length,
+                                    itemBuilder: (context, index) =>
+                                        _buildParkingCard(_parkings[index]),
+
+                                  ),
                           ),
                         ],
                       ),
@@ -327,7 +381,18 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildParkingCard(dynamic parking) {
+  Widget _buildParkingCard(ParkingModel parking) {
+    final (free, total) = _effectiveOccupancy(parking);
+    final isFull = free == 0 && total > 0;
+
+    final occupancyColor = total == 0
+        ? Colors.grey
+        : isFull
+            ? Colors.redAccent
+            : free <= total * 0.3
+                ? Colors.orange
+                : Colors.green;
+
     return GestureDetector(
       onTap: () => _showParkingActionDialog(parking),
       child: Container(
@@ -380,20 +445,48 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     }),
                   ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: occupancyColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        total == 0
+                            ? 'Sem dados'
+                            : isFull
+                                ? 'Lotado'
+                                : '$free livre(s) de $total',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: occupancyColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
-            Text(
-              parking.distance,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 16,
-                color: Colors.black87,
+            if (parking.distance != null)
+              Text(
+                parking.distance!,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
+                  color: Colors.black87,
+                ),
               ),
-            ),
           ],
         ),
       ),
     );
   }
 }
+

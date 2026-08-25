@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'screens/login/login_screen.dart';
 import 'screens/register/register_screen.dart';
 import 'screens/home/home_screen.dart';
+import 'services/realtime_service.dart';
 
 void main() {
+  RealtimeService.instance.connect();
   runApp(const ParkieiApp());
 }
 

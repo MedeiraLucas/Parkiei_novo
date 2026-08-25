@@ -153,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                
+
                 // 7. Divisor "ou entre com"
                 Row(
                   children: [
@@ -169,8 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                
-                
+
                 Center(
                   child: InkWell(
                     onTap: () {},

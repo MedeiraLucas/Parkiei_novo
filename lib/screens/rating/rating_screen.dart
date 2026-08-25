@@ -26,12 +26,19 @@ class _RatingScreenState extends State<RatingScreen> {
   final List<Map<String, String>> vagasFicticias = [
     {'vaga': 'A1', 'status': 'livre'},
     {'vaga': 'A2', 'status': 'ocupada'},
-    {'vaga': 'A3', 'status': 'ocupada'}, // Era reservada, virou ocupada
+    {'vaga': 'A3', 'status': 'ocupada'}, 
     {'vaga': 'A4', 'status': 'livre'},
     {'vaga': 'B1', 'status': 'ocupada'},
     {'vaga': 'B2', 'status': 'ocupada'},
     {'vaga': 'B3', 'status': 'livre'},
-    {'vaga': 'B4', 'status': 'ocupada'}, // Era reservada, virou ocupada
+    {'vaga': 'B4', 'status': 'ocupada'}, 
+  ];
+
+  // ADICIONADO: Lista dinâmica para gerenciar os comentários na tela
+  final List<Map<String, String>> comentariosDinamicos = [
+    {'usuario': 'Usuário Teste 1', 'texto': 'Ótimo atendimento, local seguro!'},
+    {'usuario': 'Usuário Teste 2', 'texto': 'Ótimo atendimento, local seguro!'},
+    {'usuario': 'Usuário Teste 3', 'texto': 'Ótimo atendimento, local seguro!'},
   ];
 
   void _mostrarDialogAvaliacao() {
@@ -100,6 +107,18 @@ class _RatingScreenState extends State<RatingScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () {
+                    // MODIFICADO: Captura o texto e adiciona na lista antes de fechar
+                    final String textoComentario = _comentarioController.text.trim();
+                    
+                    if (textoComentario.isNotEmpty) {
+                      setState(() {
+                        comentariosDinamicos.insert(0, {
+                          'usuario': 'Você', // Identificador do autor do novo comentário
+                          'texto': textoComentario,
+                        });
+                      });
+                    }
+
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Avaliação enviada com sucesso!'), backgroundColor: Colors.green),
@@ -125,7 +144,7 @@ class _RatingScreenState extends State<RatingScreen> {
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFFFF2B3D), size: 24), // Vermelho igual ao logo
+          Icon(icon, color: const Color(0xFFFF2B3D), size: 24), 
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -138,12 +157,11 @@ class _RatingScreenState extends State<RatingScreen> {
     );
   }
 
-  // ALTERADO: Lógica de cores simplificada (Apenas verde ou vermelho)
   Color _getCorVaga(String status) {
     if (status == 'livre') {
-      return const Color(0xFF4CAF50); // Verde vibrante do seu design
+      return const Color(0xFF4CAF50); 
     } else {
-      return const Color(0xFFD32F2F); // Vermelho vibrante do seu design
+      return const Color(0xFFD32F2F); 
     }
   }
 
@@ -257,8 +275,6 @@ class _RatingScreenState extends State<RatingScreen> {
                       style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
-                    
-                    // ALTERADO: Legenda agora contém apenas 'Livre' e 'Ocupada'
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
@@ -268,7 +284,6 @@ class _RatingScreenState extends State<RatingScreen> {
                       ],
                     ),
                     const SizedBox(height: 24),
-                    
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -284,10 +299,10 @@ class _RatingScreenState extends State<RatingScreen> {
                         return Container(
                           decoration: BoxDecoration(
                             color: _getCorVaga(vaga['status']!),
-                            borderRadius: BorderRadius.circular(12), // Deixei levemente mais arredondado igual ao print
+                            borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
+                                color: Colors.black.withValues(alpha: 0.2),
                                 blurRadius: 4,
                                 offset: const Offset(1, 2),
                               )
@@ -332,6 +347,8 @@ class _RatingScreenState extends State<RatingScreen> {
                 style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
+              
+              // RECOMENDAÇÕES (Lista agora consome os dados do State)
               Container(
                 decoration: BoxDecoration(
                   color: cardColor,
@@ -340,9 +357,10 @@ class _RatingScreenState extends State<RatingScreen> {
                 child: ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: 3,
+                  itemCount: comentariosDinamicos.length, // MODIFICADO
                   separatorBuilder: (context, index) => Divider(color: Colors.grey.shade800, height: 1),
                   itemBuilder: (context, index) {
+                    final item = comentariosDinamicos[index]; // MODIFICADO
                     return Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Row(
@@ -362,13 +380,13 @@ class _RatingScreenState extends State<RatingScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Usuário Teste ${index + 1}',
+                                  item['usuario']!, // MODIFICADO
                                   style: TextStyle(color: Colors.grey.shade400, fontWeight: FontWeight.bold, fontSize: 14),
                                 ),
                                 const SizedBox(height: 4),
-                                const Text(
-                                  'Ótimo atendimento, local seguro!',
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 15),
+                                Text(
+                                  item['texto']!, // MODIFICADO
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 15),
                                 ),
                               ],
                             ),
